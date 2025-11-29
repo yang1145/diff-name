@@ -80,6 +80,64 @@ def clean_build_artifacts():
             print(f"删除 {spec_file} 文件时出错: {str(e)}")
 
 
+def display_menu(python_files):
+    """
+    显示菜单选项
+    
+    Args:
+        python_files (list): Python文件列表
+    """
+    print("\\n请选择要编译的文件:")
+    print("0. 全部编译")
+    for i, py_file in enumerate(python_files, 1):
+        print(f"{i}. {py_file}")
+    print("q. 退出")
+
+
+def get_user_choice(max_choice):
+    """
+    获取用户选择
+    
+    Args:
+        max_choice (int): 最大选择编号
+    
+    Returns:
+        str: 用户的选择
+    """
+    while True:
+        choice = input(f"\\n请输入选项 (0-{max_choice} 或 q): ").strip().lower()
+        if choice == 'q':
+            return 'q'
+        if choice.isdigit() and 0 <= int(choice) <= max_choice:
+            return int(choice)
+        print("无效选项，请重新输入!")
+
+
+def compile_selected_files(selected_files):
+    """
+    编译选定的文件
+    
+    Args:
+        selected_files (list): 选定的文件列表
+    """
+    success_count = 0
+    for py_file in selected_files:
+        if compile_python_to_exe(py_file):
+            success_count += 1
+    
+    # 清理临时文件
+    print("\\n正在清理临时文件...")
+    clean_build_artifacts()
+    
+    # 输出总结
+    print(f"\\n编译完成: {success_count}/{len(selected_files)} 个文件编译成功")
+    
+    if success_count == len(selected_files):
+        print("所有选定文件均已成功编译!")
+    else:
+        print("部分文件编译失败，请查看上面的错误信息")
+
+
 def main():
     """
     主函数：编译所有Python文件为exe
@@ -106,27 +164,23 @@ def main():
         print("未找到需要编译的Python文件")
         return
     
-    print(f"找到 {len(python_files)} 个Python文件需要编译:")
-    for py_file in python_files:
-        print(f"  - {py_file}")
-    
-    # 编译每个Python文件
-    success_count = 0
-    for py_file in python_files:
-        if compile_python_to_exe(py_file):
-            success_count += 1
-    
-    # 清理临时文件
-    print("\n正在清理临时文件...")
-    clean_build_artifacts()
-    
-    # 输出总结
-    print(f"\n编译完成: {success_count}/{len(python_files)} 个文件编译成功")
-    
-    if success_count == len(python_files):
-        print("所有文件均已成功编译!")
-    else:
-        print("部分文件编译失败，请查看上面的错误信息")
+    # 显示菜单并处理用户选择
+    while True:
+        display_menu(python_files)
+        choice = get_user_choice(len(python_files))
+        
+        if choice == 'q':
+            print("退出程序")
+            break
+        elif choice == 0:
+            # 全部编译
+            compile_selected_files(python_files)
+            break
+        else:
+            # 编译单个文件
+            selected_file = python_files[choice - 1]
+            compile_selected_files([selected_file])
+            break
 
 
 if __name__ == "__main__":
